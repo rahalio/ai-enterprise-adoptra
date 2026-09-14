@@ -1,0 +1,637 @@
+openapi: 3.0.3
+info:
+  title: Adoptra
+  version: 0.1.0
+  description: >-
+    Analytics change-operating system for the Align-Act-Adjust-Adopt-Adapt journey.
+    Tracks sponsorship, pilots, adoption interventions, decision-metric redesign, and
+    value realisation so insight investments become role-based decision habits.
+  x-product-slug: ai-enterprise-adoptra
+  x-source: ai-in-enterprise/Accenture-Analytics-The-5As-Of-Analytics-Transformation/
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Initiatives
+    description: Analytics transformation initiatives and target value
+  - name: Journey
+    description: 5As stage gates and exit criteria
+  - name: Sponsors
+    description: Sponsorship health and decision rights
+  - name: Pilots
+    description: Act-stage experiments with control comparison
+  - name: Adoption
+    description: Training, champions, contests, WIIFM packs
+  - name: Value
+    description: Insight-driven decision share and income lift
+  - name: Governance
+    description: Budget ring-fence, freezes, and audit
+paths:
+  /v1/initiatives:
+    get:
+      operationId: listInitiatives
+      tags: [Initiatives]
+      security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: stage
+          in: query
+          schema: { type: string, enum: [align, act, adjust, adopt, adapt] }
+      responses:
+        "200":
+          description: Initiatives page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEnvelopeInitiative" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createInitiative
+      tags: [Initiatives]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InitiativeCreate" }
+      responses:
+        "201":
+          description: Initiative created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeInitiative" }
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /v1/initiatives/{initiativeId}:
+    parameters:
+      - name: initiativeId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getInitiative
+      tags: [Initiatives]
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Initiative
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeInitiative" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/initiatives/{initiativeId}/stage:
+    parameters:
+      - name: initiativeId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: advanceJourneyStage
+      tags: [Journey]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StageAdvanceRequest" }
+      responses:
+        "200":
+          description: Stage advanced or blocked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeJourneyStage" }
+        "409":
+          description: Exit criteria not met
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Problem" }
+  /v1/initiatives/{initiativeId}/stages:
+    parameters:
+      - name: initiativeId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: listJourneyStages
+      tags: [Journey]
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Stage history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEnvelopeJourneyStage" }
+  /v1/sponsors:
+    get:
+      operationId: listSponsors
+      tags: [Sponsors]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: initiativeId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sponsors page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEnvelopeSponsor" }
+    post:
+      operationId: assignSponsor
+      tags: [Sponsors]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Sponsor" }
+      responses:
+        "201":
+          description: Sponsor assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeSponsor" }
+  /v1/decision-rights:
+    post:
+      operationId: upsertDecisionRight
+      tags: [Sponsors]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DecisionRight" }
+      responses:
+        "200":
+          description: Decision right upserted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeDecisionRight" }
+  /v1/pilots:
+    get:
+      operationId: listPilots
+      tags: [Pilots]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Pilots page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEnvelopePilotExperiment" }
+    post:
+      operationId: createPilot
+      tags: [Pilots]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PilotExperiment" }
+      responses:
+        "201":
+          description: Pilot registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopePilotExperiment" }
+  /v1/pilots/{pilotId}/complete:
+    parameters:
+      - name: pilotId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: completePilot
+      tags: [Pilots]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [controlUpliftPercent, learnings]
+              properties:
+                controlUpliftPercent: { type: number, format: double }
+                learnings: { type: string }
+                trustScore: { type: number, format: float }
+      responses:
+        "200":
+          description: Pilot completed with evidence
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopePilotExperiment" }
+  /v1/adoption-interventions:
+    get:
+      operationId: listAdoptionInterventions
+      tags: [Adoption]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Interventions page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEnvelopeAdoptionIntervention" }
+    post:
+      operationId: createAdoptionIntervention
+      tags: [Adoption]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdoptionIntervention" }
+      responses:
+        "201":
+          description: Intervention created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeAdoptionIntervention" }
+  /v1/value-realisation:
+    get:
+      operationId: listValueSnapshots
+      tags: [Value]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - name: initiativeId
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Value snapshots
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEnvelopeValueRealisationSnapshot" }
+    post:
+      operationId: recordValueSnapshot
+      tags: [Value]
+      security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ValueRealisationSnapshot" }
+      responses:
+        "201":
+          description: Snapshot recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeValueRealisationSnapshot" }
+  /v1/governance/adoption-budget:
+    get:
+      operationId: getAdoptionBudget
+      tags: [Governance]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - name: initiativeId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Adoption budget ring-fence
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeAdoptionBudget" }
+  /v1/governance/freeze:
+    post:
+      operationId: freezeInitiative
+      tags: [Governance]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [initiativeId, reason]
+              properties:
+                initiativeId: { type: string }
+                reason: { type: string, enum: [single_digit_uptake, trust_breach, missing_sponsor] }
+                detail: { type: string }
+      responses:
+        "202":
+          description: Initiative frozen pending trust rebuild
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataEnvelopeInitiative" }
+components:
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+  schemas:
+
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      properties:
+        requestId: { type: string }
+        timestamp: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+    Initiative:
+      type: object
+      required: [id, name, currentStage, status, targetOperatingIncomeLiftPercent]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        currentStage: { type: string, enum: [align, act, adjust, adopt, adapt] }
+        status: { type: string, enum: [active, frozen, completed] }
+        targetOperatingIncomeLiftPercent: { type: number, format: double }
+        targetInsightDrivenSalesPercent: { type: number, format: double }
+        adoptionBudgetSharePercent: { type: number, format: double }
+    InitiativeCreate:
+      type: object
+      required: [name, targetOperatingIncomeLiftPercent]
+      properties:
+        name: { type: string }
+        targetOperatingIncomeLiftPercent: { type: number, format: double }
+        targetInsightDrivenSalesPercent: { type: number, format: double }
+        adoptionBudgetSharePercent: { type: number, format: double, minimum: 10, maximum: 15 }
+    JourneyStage:
+      type: object
+      required: [id, initiativeId, stage, status]
+      properties:
+        id: { type: string }
+        initiativeId: { type: string }
+        stage: { type: string, enum: [align, act, adjust, adopt, adapt] }
+        status: { type: string, enum: [pending, in_progress, exited, blocked] }
+        exitCriteriaMet: { type: boolean }
+        blockedReason: { type: string }
+    StageAdvanceRequest:
+      type: object
+      required: [targetStage, evidenceSummary]
+      properties:
+        targetStage: { type: string, enum: [align, act, adjust, adopt, adapt] }
+        evidenceSummary: { type: string }
+        force: { type: boolean, default: false }
+    Sponsor:
+      type: object
+      required: [id, initiativeId, name, level, engagementScore]
+      properties:
+        id: { type: string }
+        initiativeId: { type: string }
+        name: { type: string }
+        level: { type: string, enum: [c_level, business_unit, district, frontline_champion] }
+        engagementScore: { type: number, format: float }
+    DecisionRight:
+      type: object
+      required: [id, initiativeId, role, decisionType, empowered]
+      properties:
+        id: { type: string }
+        initiativeId: { type: string }
+        role: { type: string }
+        decisionType: { type: string }
+        empowered: { type: boolean }
+        metricType: { type: string, enum: [activity_compliance, insight_qualified_outcome] }
+    PilotExperiment:
+      type: object
+      required: [id, initiativeId, name, status]
+      properties:
+        id: { type: string }
+        initiativeId: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [planned, running, completed] }
+        controlUpliftPercent: { type: number, format: double }
+        learnings: { type: string }
+        trustScore: { type: number, format: float }
+    AdoptionIntervention:
+      type: object
+      required: [id, initiativeId, type, status]
+      properties:
+        id: { type: string }
+        initiativeId: { type: string }
+        type: { type: string, enum: [training, wii_fm_pack, champion_network, contest, thirty_day_challenge] }
+        status: { type: string, enum: [planned, active, completed] }
+        audienceRole: { type: string }
+        completionPercent: { type: number, format: float }
+    ValueRealisationSnapshot:
+      type: object
+      required: [id, initiativeId, period, insightDrivenSalesPercent]
+      properties:
+        id: { type: string }
+        initiativeId: { type: string }
+        period: { type: string, example: "2026-Q3" }
+        insightDrivenSalesPercent: { type: number, format: double }
+        operatingIncomeLiftPercent: { type: number, format: double }
+        dayOneUptakePercent: { type: number, format: double }
+    AdoptionBudget:
+      type: object
+      required: [initiativeId, totalProgramBudget, adoptionBudget, sharePercent]
+      properties:
+        initiativeId: { type: string }
+        totalProgramBudget: { type: number, format: double }
+        adoptionBudget: { type: number, format: double }
+        sharePercent: { type: number, format: double }
+        currency: { type: string, example: USD }
+
+    DataEnvelopeInitiative:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/Initiative" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeInitiative:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/Initiative" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopeJourneyStage:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/JourneyStage" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeJourneyStage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/JourneyStage" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopeSponsor:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/Sponsor" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeSponsor:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/Sponsor" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopeDecisionRight:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/DecisionRight" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeDecisionRight:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/DecisionRight" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopePilotExperiment:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/PilotExperiment" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopePilotExperiment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/PilotExperiment" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopeAdoptionIntervention:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/AdoptionIntervention" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeAdoptionIntervention:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/AdoptionIntervention" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopeValueRealisationSnapshot:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/ValueRealisationSnapshot" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeValueRealisationSnapshot:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/ValueRealisationSnapshot" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
+    DataEnvelopeAdoptionBudget:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/AdoptionBudget" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeAdoptionBudget:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/AdoptionBudget" }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+
